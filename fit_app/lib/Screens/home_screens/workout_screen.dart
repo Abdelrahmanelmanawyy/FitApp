@@ -1,4 +1,4 @@
-import 'package:fit_app/Screens/home_screens/analytics_screen.dart';
+
 import 'package:fit_app/constants/color.dart';
 import 'package:fit_app/firebase_services/firestore_service.dart';
 import 'package:fit_app/models/workout_models.dart';
@@ -31,17 +31,7 @@ class WorkoutScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AnalyticsScreen()),
-                );
-              },
-
-              child: Text("data"),
-            ),
-
+            
             Container(
               decoration: BoxDecoration(
                 gradient: AppGradients.primaryGradient,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:fit_app/firebase_services/firestore_service.dart';
 import 'package:fit_app/models/distane_model.dart';
 import 'package:fit_app/widgets/home_widgets/distance_screen_widgets/distance_appbar.dart';
@@ -19,28 +20,55 @@ class _DistanceScreenState extends State<DistanceScreen> {
   Position? _endPosition;
   double _distanceInMeters = 0.0;
   bool _isTracking = false;
-  int _sessionCount = 0;
-
   final FirestoreService_Distance _firestoreService = FirestoreService_Distance();
-  final Stopwatch _stopwatch = Stopwatch();
+  Timer? _timer;
+  int _elapsedSeconds = 0;
+  bool _isDisposed = false;
+  late Stream<List<DistanceModel>> _historyStream;
 
-  // Start session and start stopwatch
+  String get _formattedTime {
+    final minutes = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_elapsedSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _historyStream = _firestoreService.streamSessions();
+  }
+
+  void _startTimer() {
+    _elapsedSeconds = 0;
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!_isDisposed) {
+        setState(() {
+          _elapsedSeconds++;
+        });
+      }
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _elapsedSeconds = 0;
+  }
+
   Future<void> _startSession() async {
     final hasPermission = await _handlePermission();
     if (!hasPermission) return;
 
     final position = await Geolocator.getCurrentPosition();
-    if (mounted) {
+    if (mounted && !_isDisposed) {
       setState(() {
         _startPosition = position;
         _isTracking = true;
         _distanceInMeters = 0.0;
-        _stopwatch.start();  // Start the stopwatch
       });
+      _startTimer();
     }
   }
 
-  // End session, save the data, and reset the stopwatch
   Future<void> _endSession() async {
     if (!_isTracking) return;
 
@@ -65,17 +93,14 @@ class _DistanceScreenState extends State<DistanceScreen> {
       );
     }
 
-    if (mounted) {
+    if (mounted && !_isDisposed) {
       setState(() {
-        _sessionCount++;  // Increment session count
-        _isTracking = false;  // Stop tracking
-        _stopwatch.stop();  // Stop the stopwatch
-        _stopwatch.reset();  // Reset the stopwatch
+        _isTracking = false;
       });
+      _stopTimer();
     }
   }
 
-  // Handle permission request for location access
   Future<bool> _handlePermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
@@ -88,26 +113,82 @@ class _DistanceScreenState extends State<DistanceScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final elapsedTime = _stopwatch.elapsed;  // Get the elapsed time
+  void dispose() {
+    _isDisposed = true;
+    _timer?.cancel();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          DistanceAppBarWidget(donemeter: _distanceInMeters),
-          DistanceDisplay(
-            distance: _distanceInMeters,
-            elapsed: elapsedTime,  // Pass the elapsed time to DistanceDisplay
-          ),
-          const SizedBox(height: 20),
-          TrackingControl(
-            tracking: _isTracking,
-            onStart: _startSession,
-            onStop: _endSession,
-            sessionCount: _sessionCount,  // Pass the actual session count
-          ),
-        ],
+      body: StreamBuilder<List<DistanceModel>>(
+        stream: _historyStream,
+        builder: (context, snapshot) {
+          final sessions = snapshot.data ?? [];
+
+          return Column(
+            children: [
+              DistanceAppBarWidget(donemeter: _distanceInMeters),
+              DistanceDisplay(distance: _distanceInMeters),
+              Text(
+                _formattedTime,
+                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              TrackingControl(
+                tracking: _isTracking,
+                onStart: _startSession,
+                onStop: _endSession,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'History',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                '${sessions.length}',
+                style: const TextStyle(
+                  color: Colors.deepOrange,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (snapshot.connectionState == ConnectionState.waiting)
+                const Expanded(child: Center(child: CircularProgressIndicator()))
+              else if (snapshot.hasError)
+                const Expanded(child: Center(child: Text("Error loading history")))
+              else if (sessions.isEmpty)
+                const Expanded(child: Center(child: Text("No history available")))
+              else
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: sessions.length,
+                    itemBuilder: (context, index) {
+                      final session = sessions[index];
+                      return Card(
+                        color: Colors.white,
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          leading: const Icon(Icons.directions_walk, color: Colors.blue),
+                          title: Text("${session.distance.toStringAsFixed(2)} meters"),
+                          subtitle: Text(session.timestamp),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

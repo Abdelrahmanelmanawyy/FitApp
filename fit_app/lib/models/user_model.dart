@@ -1,9 +1,10 @@
 class UserData {
   final String? name;
-  final int age;           // Age is an integer
-  final double height;     // Height is a double
-  final double weight;     // Weight is a double
+  final int age;
+  final double height;
+  final double weight;
   final String gender;
+  final String? imageUrl;
 
   UserData({
     required this.name,
@@ -11,6 +12,7 @@ class UserData {
     required this.height,
     required this.weight,
     required this.gender,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,16 +22,18 @@ class UserData {
       'height': height,
       'weight': weight,
       'gender': gender,
+      'imageUrl': imageUrl,
     };
   }
 
   factory UserData.fromMap(Map<String, dynamic> map) {
     return UserData(
       name: map['name'],
-      age: map['age'] as int,  // Ensure age is treated as an integer
-      height: map['height'] is int ? (map['height'] as int).toDouble() : map['height'], // Ensure height is treated as a double
-      weight: map['weight'] is int ? (map['weight'] as int).toDouble() : map['weight'], // Ensure weight is treated as a double
+      age: map['age'] as int,
+      height: map['height'] is int ? (map['height'] as int).toDouble() : map['height'],
+      weight: map['weight'] is int ? (map['weight'] as int).toDouble() : map['weight'],
       gender: map['gender'],
+      imageUrl: map['imageUrl'], 
     );
   }
 }

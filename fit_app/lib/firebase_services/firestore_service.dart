@@ -25,7 +25,7 @@ Future<UserData?> getUserData() async {
   final doc = await _db.collection('users').doc(uid).get();
   if (!doc.exists) return null;
 
-  print(doc.data()); // Log the data for debugging
+  print(doc.data()); 
   return UserData.fromMap(doc.data()!);
 }
 
@@ -152,6 +152,11 @@ class FirestoreService_workout {
 
 
 
+
+
+
+
+
 // ignore: camel_case_types
 class FirestoreService_Distance {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -173,34 +178,34 @@ class FirestoreService_Distance {
     }
   }
 
-  // Load distance sessions for the logged-in user
-  Future<List<DistanceModel>> loadSessions() async {
+ 
+  Stream<List<DistanceModel>> streamSessions() {
     final uid = _auth.currentUser?.uid;
     if (uid == null) {
-      throw Exception("User not logged in");
+      return Stream.value([]); 
     }
 
-    try {
-      final snapshot = await _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('distances')
-          .get();
-      return snapshot.docs.map((doc) {
-        return DistanceModel.fromMap(doc.data());
-      }).toList();
-    } catch (e) {
-      print('Error loading sessions: $e');
-      return [];
-    }
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('distances')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            try {
+              return DistanceModel.fromMap(doc.data());
+            } catch (e) {
+              print('Error parsing distance session: $e');
+              return null;
+            }
+          }).whereType<DistanceModel>().toList(); // Filter out nulls
+        });
   }
 
-  // Delete a distance session for the logged-in user
   Future<void> deleteSession(String docId) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) {
-      throw Exception("User not logged in");
-    }
+    if (uid == null) throw Exception("User not logged in");
 
     try {
       await _firestore
@@ -213,4 +218,32 @@ class FirestoreService_Distance {
       print('Error deleting session: $e');
     }
   }
+ Future<int> getTotalDistance() async {
+  final uid = _auth.currentUser?.uid;
+  if (uid == null) throw Exception("User not logged in");
+
+  try {
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('distances')
+        .get();
+
+    int total = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final rawDistance = data['distance'];
+      if (rawDistance is num) {
+        total += rawDistance.toInt();
+      }
+    }
+    return total;
+  } catch (e) {
+    print('Error getting total distance: $e');
+    return 0;
+  }
+}
+
+
+
 }

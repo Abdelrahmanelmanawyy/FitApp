@@ -6,14 +6,14 @@ class TrackingControl extends StatelessWidget {
   final bool tracking;
   final VoidCallback onStart;
   final VoidCallback onStop;
-  final int sessionCount;
+ 
 
   const TrackingControl({
     Key? key,
     required this.tracking,
     required this.onStart,
     required this.onStop,
-    required this.sessionCount,
+   
   }) : super(key: key);
 
   @override
@@ -21,7 +21,7 @@ class TrackingControl extends StatelessWidget {
     return Column(
       children: [
         
-        Text('Total Sessions: $sessionCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+       
         const SizedBox(height: 8),
         ElevatedButton(
   onPressed: tracking ? onStop : onStart,

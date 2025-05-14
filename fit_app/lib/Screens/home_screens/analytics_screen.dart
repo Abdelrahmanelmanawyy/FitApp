@@ -14,6 +14,14 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   DateTime _selectedMonth = DateTime.now();
   final FirestoreService_workout firestoreService = FirestoreService_workout();
+   final Map<String, Map<String, int>> workoutData = {
+      '': {'strength': 5,},
+      '2': {'strength': 6,},
+      '3': {'strength': 7,},
+      '4': {'strength': 4,},
+      
+    };
+  
 
   void _changeMonth(int offset) {
     setState(() {
@@ -45,14 +53,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Overview'),
-        centerTitle: true,
-      ),
+     
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 180),
+              child: Text('Overview', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),),
+            ),
+            SizedBox(height: 30,),
+
             StreamBuilder<Map<String, int>>(
               stream: firestoreService.getMuscleGroupFrequency(
                 filterMonth: _selectedMonth,
@@ -80,13 +91,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           onPrevious: () => _changeMonth(-1),
                           onNext: () => _changeMonth(1),
                         ),
-                        const SizedBox(height: 32),
-                        WorkoutChart(
-                               cardio: 2,
-                               strength: muscleData.length,
-
-                                
-                              ),
+                        SizedBox(height:20),
+                        WorkoutChart(data:workoutData)
+                       
+                        
                         
                       ],
                     ),
@@ -94,6 +102,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 );
               },
             ),
+        
+         
+          
+            
           ],
         ),
       ),

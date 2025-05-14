@@ -1,10 +1,23 @@
+import 'package:fit_app/constants/color.dart';
 import 'package:flutter/material.dart';
 
 class WorkoutProgressCard extends StatelessWidget {
-  const WorkoutProgressCard({super.key});
+  final int exerciseNumber;
+  final int exerciseGoal;
+
+  const WorkoutProgressCard({
+    super.key,
+    required this.exerciseNumber,
+    required this.exerciseGoal,
+  });
 
   @override
   Widget build(BuildContext context) {
+   
+    final int safeGoal = exerciseGoal == 0 ? 1 : exerciseGoal;
+    final double percentage = (exerciseNumber / safeGoal) * 100;
+    final String percentageText = '${percentage.toStringAsFixed(0)}%';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -15,35 +28,35 @@ class WorkoutProgressCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Workout Progress',
+              const Text(
+                'Workout',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '12 Exercise left',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                '$exerciseNumber of $exerciseGoal exercises done',
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
             ],
           ),
           Container(
-            width: 40,
-            height: 40,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.blue, width: 2),
+              border: Border.all(color: AppColors.primaryColor, width: 4),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                '74%',
-                style: TextStyle(
+                percentageText,
+                style: const TextStyle(
                   color: Colors.blue,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,

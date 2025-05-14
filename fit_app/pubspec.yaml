@@ -18,8 +18,10 @@ dependencies:
   firebase_auth: ^5.5.3
   intl: ^0.20.2
   geolocator: ^14.0.0
-  firebase_database: ^11.3.5
   image_picker: ^1.1.2
+  firebase_storage: ^12.4.5
+  fl_chart: ^1.0.0
+  flutter_charts: ^0.5.2
 
 
 dev_dependencies:

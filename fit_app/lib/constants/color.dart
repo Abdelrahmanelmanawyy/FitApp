@@ -14,7 +14,7 @@ class AppGradients {
   );
 
   static const LinearGradient secondaryGradient = LinearGradient(
-    colors: [Color(0xFF2188C0), Color(0xFF0F405A)], // Reverse gradient
+    colors: [Color.fromARGB(186, 33, 136, 192), Color.fromARGB(199, 15, 64, 90)], // Reverse gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
